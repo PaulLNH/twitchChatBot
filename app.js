@@ -38,7 +38,6 @@ client.on("connected", (address, port) => {
   );
   client
     .say("draaxx", "/color GoldenRod")
-    .then(() => client.say("draaxx", displayQuestion()))
     .catch(error => console.log(`The following error occured: ${error}`));
 });
 
