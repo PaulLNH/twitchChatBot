@@ -1,0 +1,121 @@
+{
+    "trivia": [{
+            "category": "PvP: Diminishing Returns",
+            "type": "multiple",
+            "difficulty": "medium",
+            "question": "Which of these spells share diminishing returns with Mages &quot;Polymorph&quot;",
+            "correct_answer": "Demon Hunter [Imprison]",
+            "incorrect_answers": [
+                "2K Games",
+                "Activision",
+                "Rockstar Games"
+            ]
+        },
+        {
+            "category": "Sports",
+            "type": "multiple",
+            "difficulty": "medium",
+            "question": "At which bridge does the annual Oxford and Cambridge boat race start?",
+            "correct_answer": "Putney",
+            "incorrect_answers": [
+                "Hammersmith",
+                "Vauxhall ",
+                "Battersea"
+            ]
+        },
+        {
+            "category": "History",
+            "type": "multiple",
+            "difficulty": "hard",
+            "question": "Which one of these rulers did not belong to the Habsburg dynasty?",
+            "correct_answer": "Philip V",
+            "incorrect_answers": [
+                "Charles V",
+                "Philip II",
+                "Francis Joseph"
+            ]
+        },
+        {
+            "category": "Entertainment: Film",
+            "type": "boolean",
+            "difficulty": "easy",
+            "question": "In Alfred Hitchcock&#039;s film &#039;Psycho&#039; it is said he used chocolate syrup to simulate the blood in the famous shower scene from ",
+            "correct_answer": "True",
+            "incorrect_answers": [
+                "False"
+            ]
+        },
+        {
+            "category": "Entertainment: Video Games",
+            "type": "multiple",
+            "difficulty": "medium",
+            "question": "Which of these is NOT a playable character race in the video game &quot;Starbound&quot;?",
+            "correct_answer": "Fenerox",
+            "incorrect_answers": [
+                "Floran",
+                "Novakid",
+                "Hylotl"
+            ]
+        },
+        {
+            "category": "Entertainment: Video Games",
+            "type": "multiple",
+            "difficulty": "hard",
+            "question": "Which car did not appear in the 2002 Lego Game: Drome Racers?",
+            "correct_answer": "Wasp",
+            "incorrect_answers": [
+                "Raptor",
+                "Hornet",
+                "Behemoth"
+            ]
+        },
+        {
+            "category": "Science & Nature",
+            "type": "multiple",
+            "difficulty": "medium",
+            "question": "Deuterium is an isotope of which element?",
+            "correct_answer": "Hydrogen",
+            "incorrect_answers": [
+                "Nitrogen",
+                "Helium",
+                "Neon"
+            ]
+        },
+        {
+            "category": "General Knowledge",
+            "type": "multiple",
+            "difficulty": "medium",
+            "question": "What was the soft drink Pepsi originally introduced as?",
+            "correct_answer": "Brad&#039;s Drink",
+            "incorrect_answers": [
+                "Pepsin Pop",
+                "Carolina Cola",
+                "Pepsin Syrup"
+            ]
+        },
+        {
+            "category": "Entertainment: Television",
+            "type": "multiple",
+            "difficulty": "hard",
+            "question": "What was the callsign of Commander William Adama in Battlestar Galactica (2004)?",
+            "correct_answer": "Husker",
+            "incorrect_answers": [
+                "Starbuck",
+                "Apollo",
+                "Crashdown"
+            ]
+        },
+        {
+            "category": "Entertainment: Film",
+            "type": "multiple",
+            "difficulty": "medium",
+            "question": "What is the name of the queen&#039;s pet in A Bug&#039;s Life?",
+            "correct_answer": "Aphie",
+            "incorrect_answers": [
+                "Flik",
+                "Hopper",
+                "Dot"
+            ]
+        }
+    ]
+}

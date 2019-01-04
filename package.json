@@ -1,0 +1,23 @@
+{
+  "name": "twitchchatbot",
+  "version": "1.0.0",
+  "description": "Twitch Chat Bot using Twitch.tv API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaulLNH/twitchChatBot.git"
+  },
+  "author": "Draaxx",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PaulLNH/twitchChatBot/issues"
+  },
+  "homepage": "https://github.com/PaulLNH/twitchChatBot#readme",
+  "dependencies": {
+    "dotenv": "^6.2.0",
+    "tmi.js": "^1.2.1"
+  }
+}
