@@ -3,12 +3,12 @@
             "category": "PvP: Diminishing Returns",
             "type": "multiple",
             "difficulty": "medium",
-            "question": "Which of these spells share diminishing returns with Mages &quot;Polymorph&quot;",
+            "question": "Which of these spells share diminishing returns with Mages [Polymorph]?",
             "correct_answer": "Demon Hunter [Imprison]",
             "incorrect_answers": [
-                "2K Games",
-                "Activision",
-                "Rockstar Games"
+                "Rogue [Gouge]",
+                "Hunter [Freezing Trap]",
+                "Paladin [Hammer of Justice]"
             ]
         },
         {
