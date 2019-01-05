@@ -6,8 +6,8 @@
             "question": "Which of these spells share diminishing returns with Mages [Polymorph]?",
             "correct_answer": "Demon Hunter [Imprison]",
             "incorrect_answers": [
-                "Rogue [Gouge]",
-                "Hunter [Freezing Trap]",
+                "Priest [Mind Control]",
+                "Warlock [Seduction]",
                 "Paladin [Hammer of Justice]"
             ]
         },
