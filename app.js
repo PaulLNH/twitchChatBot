@@ -1,10 +1,15 @@
 const tmi = require("tmi.js");
 require("dotenv").config();
-const http = require('http');
+// const http = require('http');
+const axios = require('axios');
 const triviaQuestions = require("./trivia");
 const supportedChannel = process.env.TWITCH_USERNAME;
 const url = 'http://jservice.io/api/random';
 var currentQuestion = {};
+
+String.prototype.toProperCase = function () {
+    return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+};
 
 const options = {
     options: {
@@ -17,7 +22,7 @@ const options = {
         username: process.env.TWITCH_USERNAME,
         password: process.env.TWITCH_OAUTH
     },
-    channels: ["supportedChannel"]
+    channels: [supportedChannel]
 };
 
 const client = new tmi.client(options);
@@ -26,59 +31,43 @@ client.connect();
 displayQuestion = () => {
     client.say(
         supportedChannel,
-        `A.) ${triviaQuestions.trivia[0].correct_answer}`
+        `Category: ${currentQuestion.category.title} for ${currentQuestion.value} points.`
     );
-    for (let i = 0; i < triviaQuestions.trivia[0].incorrect_answers.length; i++) {
-        let letter;
-        console.log(triviaQuestions.trivia[0].incorrect_answers[i]);
-        switch (i) {
-            case 0:
-                letter = "B";
-                break;
-            case 1:
-                letter = "C";
-                break;
-            case 2:
-                letter = "D";
-                break;
-            case 3:
-                letter = "E";
-                break;
-            case 4:
-                letter = "F";
-                break;
-        }
-        client.say(
-            supportedChannel,
-            `${letter}.) ${triviaQuestions.trivia[0].incorrect_answers[i]}`
-        );
-    }
+};
+
+getTriviaQuestionHTTP = () => {
+    // http.get(url, res => {
+    //     var body = '';
+
+    //     res.on('data', chunk => body += chunk);
+
+    //     res.on('end', () => {
+    //         let parsedCurrentQuestion = body;
+    //         currentQuestion = parsedCurrentQuestion[0];
+    //         console.log(`Current Question: ${body}`);
+    //         // return currentQuestion
+    //     });
+    // }).on('error', errpr => console.log("Got an error: ", err));
 };
 
 getTriviaQuestion = () => {
-    http.get(url, function (res) {
-        var body = '';
-
-        res.on('data', function (chunk) {
-            body += chunk;
+    axios.get(url)
+        .then(response => {
+            currentQuestion = response.data[0];
+            console.log(response.data[0]);
+            // console.log(response.data.explanation);
+        })
+        .catch(error => {
+            console.log(error);
         });
-
-        res.on('end', function () {
-            currentQuestion = JSON.parse(body);
-            console.log(currentQuestion);
-        });
-    }).on('error', function (err) {
-        console.log("Got an error: ", err);
-    });
 };
 
 startTriviaGame = () => {
     client
         .say(supportedChannel, `TRIVIA HAS BEGUN!`)
-        .then(() =>
-            client.say(supportedChannel, `${triviaQuestions.trivia[0].question}`)
-        )
-        .then(() => displayQuestion());
+        .then(() => client.say(supportedChannel, `Category: "${currentQuestion.category.title}", worth $${currentQuestion.value}`))
+        .then(() => client.say(supportedChannel, `${currentQuestion.question}`))
+        .catch(error => console.log(`The following error occured: ${error}`));
 }
 
 displayCommandsList = () => {
@@ -91,7 +80,7 @@ displayCommandsList = () => {
                 supportedChannel,
                 `!clear - clears the chat (mod or broadcaster only)`
             )
-        );
+        ).catch(error => console.log(`The following error occured: ${error}`));
 }
 
 clearChatCommand = (user) => {
@@ -108,7 +97,7 @@ clearChatCommand = (user) => {
 correctGuess = (user, guess) => {
     client.say(
         supportedChannel,
-        `Congratulations @${user["display-name"]}! ${guess.toUpperCase()} was the correct answer!`
+        `Congratulations @${user["display-name"]}, "${guess.toProperCase()}" is the correct answer! $${currentQuestion.value} has been added to your bankroll.`
     );
 }
 
@@ -122,16 +111,19 @@ incorrectGuess = (user, guess) => {
 client.on("connected", (address, port) => {
     getTriviaQuestion();
     client.action(supportedChannel, "here, type '!commands' to see what I can do!");
-    client
-        .say(supportedChannel, "/color GoldenRod")
+    client.say(supportedChannel, "/color GoldenRod")
+        .then(() => client.say(supportedChannel, `I can use the chat feature!`))
         .catch(error => console.log(`The following error occured: ${error}`));
 });
 
 client.on("chat", (channel, user, message, self) => {
+    console.log(message);
     let messageParsed = message.toLowerCase().trim();
+    let answerParsed = currentQuestion.answer.toLowerCase();
 
-    if (messageParsed == currentQuestion.answer.toLowerCase()) {
-        client.say(supportedChannel, `Congratulations ${user["display-name"]}`)
+    if (messageParsed == answerParsed) {
+        // client.say(supportedChannel, `Congratulations ${user["display-name"]}, `);
+        correctGuess(user, message);
     }
 
     if (!self && messageParsed[0] === "!") {

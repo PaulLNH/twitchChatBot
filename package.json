@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/PaulLNH/twitchChatBot#readme",
   "dependencies": {
+    "axios": "^0.18.0",
     "dotenv": "^6.2.0",
     "tmi.js": "^1.2.1"
   }
