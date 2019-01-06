@@ -1,6 +1,10 @@
 const tmi = require("tmi.js");
 require("dotenv").config();
+const http = require('http');
 const triviaQuestions = require("./trivia");
+const supportedChannel = process.env.TWITCH_USERNAME;
+const url = 'http://jservice.io/api/random';
+var currentQuestion = {};
 
 const options = {
     options: {
@@ -13,7 +17,7 @@ const options = {
         username: process.env.TWITCH_USERNAME,
         password: process.env.TWITCH_OAUTH
     },
-    channels: ["draaxx"]
+    channels: ["supportedChannel"]
 };
 
 const client = new tmi.client(options);
@@ -21,7 +25,7 @@ client.connect();
 
 displayQuestion = () => {
     client.say(
-        "draaxx",
+        supportedChannel,
         `A.) ${triviaQuestions.trivia[0].correct_answer}`
     );
     for (let i = 0; i < triviaQuestions.trivia[0].incorrect_answers.length; i++) {
@@ -45,29 +49,46 @@ displayQuestion = () => {
                 break;
         }
         client.say(
-            "draaxx",
+            supportedChannel,
             `${letter}.) ${triviaQuestions.trivia[0].incorrect_answers[i]}`
         );
     }
 };
 
+getTriviaQuestion = () => {
+    http.get(url, function (res) {
+        var body = '';
+
+        res.on('data', function (chunk) {
+            body += chunk;
+        });
+
+        res.on('end', function () {
+            currentQuestion = JSON.parse(body);
+            console.log(currentQuestion);
+        });
+    }).on('error', function (err) {
+        console.log("Got an error: ", err);
+    });
+};
+
 startTriviaGame = () => {
     client
-        .say("draaxx", `TRIVIA HAS BEGUN!`)
+        .say(supportedChannel, `TRIVIA HAS BEGUN!`)
         .then(() =>
-            client.say("draaxx", `${triviaQuestions.trivia[0].question}`)
+            client.say(supportedChannel, `${triviaQuestions.trivia[0].question}`)
         )
         .then(() => displayQuestion());
 }
 
 displayCommandsList = () => {
     client
-        .say("draaxx", `!hello - send salutations to yourself`)
-        .then(() => client.say("draaxx", `!trivia - start a new trivia game`))
-        .then(() => client.say("draaxx", `!bye - have bot wish you farewell`))
+        .say(supportedChannel, `!hello - send salutations to yourself`)
+        .then(() => client.say(supportedChannel, `!trivia - start a new trivia game`))
+        .then(() => client.say(supportedChannel, `!bye - have bot wish you farewell`))
         .then(() =>
             client.say(
-                "draaxx",
+                supportedChannel,
                 `!clear - clears the chat (mod or broadcaster only)`
             )
         );
@@ -75,10 +96,10 @@ displayCommandsList = () => {
 
 clearChatCommand = (user) => {
     if (user.mod || user.badges.broadcaster === "1") {
-        client.say("draaxx", `/clear`);
+        client.say(supportedChannel, `/clear`);
     } else {
         client.say(
-            "draaxx",
+            supportedChannel,
             `I'm sorry @${user["display-name"]}, only mods may clear chat.`
         );
     }
@@ -86,27 +107,33 @@ clearChatCommand = (user) => {
 
 correctGuess = (user, guess) => {
     client.say(
-        "draaxx",
+        supportedChannel,
         `Congratulations @${user["display-name"]}! ${guess.toUpperCase()} was the correct answer!`
     );
 }
 
 incorrectGuess = (user, guess) => {
     client.say(
-        "draaxx",
+        supportedChannel,
         `I'm sorry @${user["display-name"]}, ${guess.toUpperCase()} is not correct.`
     );
 }
 
 client.on("connected", (address, port) => {
-    client.action("draaxx", "here, type '!commands' to see what I can do!");
+    getTriviaQuestion();
+    client.action(supportedChannel, "here, type '!commands' to see what I can do!");
     client
-        .say("draaxx", "/color GoldenRod")
+        .say(supportedChannel, "/color GoldenRod")
         .catch(error => console.log(`The following error occured: ${error}`));
 });
 
 client.on("chat", (channel, user, message, self) => {
     let messageParsed = message.toLowerCase().trim();
+
+    if (messageParsed == currentQuestion.answer.toLowerCase()) {
+        client.say(supportedChannel, `Congratulations ${user["display-name"]}`)
+    }
+
     if (!self && messageParsed[0] === "!") {
         console.log(messageParsed);
         switch (messageParsed) {
@@ -114,14 +141,14 @@ client.on("chat", (channel, user, message, self) => {
                 displayCommandsList();
                 break;
             case "!hello":
-                client.say("draaxx", `Yooo @${user["display-name"]}! What you doin?`);
+                client.say(supportedChannel, `Yooo @${user["display-name"]}! What you doin?`);
                 break;
             case "!trivia":
                 startTriviaGame();
                 break;
             case "!bye":
                 client.say(
-                    "draaxx",
+                    supportedChannel,
                     `Catch you on the flipside @${user["display-name"]}!`
                 );
                 break;
@@ -129,25 +156,6 @@ client.on("chat", (channel, user, message, self) => {
                 clearChatCommand(user);
                 break;
             default:
-                break;
-        }
-    }
-    if (!self && messageParsed === "a" || messageParsed === "b" || messageParsed === "c" || messageParsed === "d" || messageParsed === "e") {
-        switch (messageParsed) {
-            case "a":
-                correctGuess(user, messageParsed);
-                break;
-            case "b":
-                incorrectGuess(user, messageParsed);
-                break;
-            case "c":
-                incorrectGuess(user, messageParsed);
-                break;
-            case "d":
-                incorrectGuess(user, messageParsed);
-                break;
-            case "e":
-                incorrectGuess(user, messageParsed);
                 break;
         }
     }
