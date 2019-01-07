@@ -1,3 +1,5 @@
+const PlayTriviaLive = require('./playtrivialive');
+const utils = require('./utils');
 const tmi = require("tmi.js");
 require("dotenv").config();
 // const http = require('http');
@@ -6,9 +8,38 @@ const triviaQuestions = require("./trivia");
 const supportedChannel = process.env.TWITCH_USERNAME;
 const url = 'http://jservice.io/api/random';
 var currentQuestion = {};
+const testQuestion = {
+    id: 10572,
+    answer: '<i>Child\\\'s Play</i>',
+    question: 'Chucky, a killer doll, made his debut in this 1988 film',
+    value: 200,
+    airdate: '1993-02-26T12:00:00.000Z',
+    created_at: '2014-02-11T22:52:44.862Z',
+    updated_at: '2014-02-11T22:52:44.862Z',
+    category_id: 1232,
+    game_id: null,
+    invalid_count: null,
+    category: {
+        id: 1232,
+        title: 'horror films',
+        created_at: '2014-02-11T22:52:44.724Z',
+        updated_at: '2014-02-11T22:52:44.724Z',
+        clues_count: 5
+    }
+};
+var Round = {
+    players: [],
+    winners: [],
+    losers: [],
+};
+var roundWinners = [];
+var roundLosers = [];
 
+// For formatting player input into proper case ex: "tHanK yOu" -> "Thank You"
 String.prototype.toProperCase = function () {
-    return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+    return this.replace(/\w\S*/g, function (txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
 };
 
 const options = {
@@ -28,26 +59,58 @@ const options = {
 const client = new tmi.client(options);
 client.connect();
 
+displayTestQuestion = () => {
+    client
+        .say(supportedChannel, `TRIVIA HAS BEGUN!`)
+        .then(() => client.say(supportedChannel, `Category: "${testQuestion.category.title}", worth $${testQuestion.value}`))
+        .then(() => client.say(supportedChannel, `${testQuestion.question}`))
+        .catch(error => console.log(`The following error occured: ${error}`));
+};
+
 displayQuestion = () => {
+    client
+        .say(supportedChannel, `TRIVIA HAS BEGUN!`)
+        .then(() => client.say(supportedChannel, `Category: "${currentQuestion.category.title}", worth $${currentQuestion.value}`))
+        .then(() => client.say(supportedChannel, `${currentQuestion.question}`))
+        .catch(error => console.log(`The following error occured: ${error}`));
+};
+
+displayTestAnswer = (user, guess) => {
     client.say(
         supportedChannel,
-        `Category: ${currentQuestion.category.title} for ${currentQuestion.value} points.`
+        `Congratulations @${user["display-name"]}, "${utils.answerParsed(testQuestion.answer).toUpperCase()}" is the correct answer! $${testQuestion.value} has been added to your total.`
     );
 };
 
-getTriviaQuestionHTTP = () => {
-    // http.get(url, res => {
-    //     var body = '';
+displayAnswer = (user, guess) => {
+    client.say(
+        supportedChannel,
+        `Congratulations @${user["display-name"]}, "${utils.answerParsed(currentQuestion.answer).toUpperCase()}" is the correct answer! $${currentQuestion.value} has been added to your total.`
+    );
+};
 
-    //     res.on('data', chunk => body += chunk);
+// answerParsed = (targetStr) => {
+//     var index = targetStr.indexOf("\\");
+//     while (index >= 0) {
+//         targetStr = targetStr.replace("\\", "");
+//         index = targetStr.indexOf("\\");
+//     }
+//     let parsedString = targetStr.replace(/<\/?[^>]+(>|$)/g, "").toLowerCase();
+//     return parsedString;
+// };
 
-    //     res.on('end', () => {
-    //         let parsedCurrentQuestion = body;
-    //         currentQuestion = parsedCurrentQuestion[0];
-    //         console.log(`Current Question: ${body}`);
-    //         // return currentQuestion
-    //     });
-    // }).on('error', errpr => console.log("Got an error: ", err));
+displayTestIncorrectGuess = (user, guess) => {
+    client.say(
+        supportedChannel,
+        `I'm sorry @${user["display-name"]}, ${guess.toUpperCase()} is not correct.`
+    );
+}
+
+displayIncorrectGuess = (user, guess) => {
+    client.say(
+        supportedChannel,
+        `I'm sorry @${user["display-name"]}, ${guess.toUpperCase()} is not correct.`
+    );
 };
 
 getTriviaQuestion = () => {
@@ -63,12 +126,19 @@ getTriviaQuestion = () => {
 };
 
 startTriviaGame = () => {
-    client
-        .say(supportedChannel, `TRIVIA HAS BEGUN!`)
-        .then(() => client.say(supportedChannel, `Category: "${currentQuestion.category.title}", worth $${currentQuestion.value}`))
-        .then(() => client.say(supportedChannel, `${currentQuestion.question}`))
-        .catch(error => console.log(`The following error occured: ${error}`));
-}
+    // displayQuestion();
+    displayTestQuestion();
+};
+
+startNewRound = () => {
+    Round = {
+        players: [],
+        winners: [],
+        losers: [],
+    };
+    roundLosers = [];
+    roundWinners = [];
+};
 
 displayCommandsList = () => {
     client
@@ -81,7 +151,7 @@ displayCommandsList = () => {
                 `!clear - clears the chat (mod or broadcaster only)`
             )
         ).catch(error => console.log(`The following error occured: ${error}`));
-}
+};
 
 clearChatCommand = (user) => {
     if (user.mod || user.badges.broadcaster === "1") {
@@ -92,57 +162,65 @@ clearChatCommand = (user) => {
             `I'm sorry @${user["display-name"]}, only mods may clear chat.`
         );
     }
-}
-
-correctGuess = (user, guess) => {
-    client.say(
-        supportedChannel,
-        `Congratulations @${user["display-name"]}, "${guess.toProperCase()}" is the correct answer! $${currentQuestion.value} has been added to your bankroll.`
-    );
-}
-
-incorrectGuess = (user, guess) => {
-    client.say(
-        supportedChannel,
-        `I'm sorry @${user["display-name"]}, ${guess.toUpperCase()} is not correct.`
-    );
-}
+};
 
 client.on("connected", (address, port) => {
     getTriviaQuestion();
-    client.action(supportedChannel, "here, type '!commands' to see what I can do!");
-    client.say(supportedChannel, "/color GoldenRod")
-        .then(() => client.say(supportedChannel, `I can use the chat feature!`))
+    client.action(supportedChannel, `bot is now online! type "!help" for a list of commands.`);
+    client.say(supportedChannel, `/color GoldenRod`)
         .catch(error => console.log(`The following error occured: ${error}`));
 });
 
-client.on("chat", (channel, user, message, self) => {
+client.on(`chat`, (channel, user, message, self) => {
     console.log(message);
     let messageParsed = message.toLowerCase().trim();
-    let answerParsed = currentQuestion.answer.toLowerCase();
+    // let testAnswerParsed = testQuestion.answer.replace(/<\/?[^>]+(>|$)/g, "").toLowerCase();
+    let testAnswerParsed = utils.answerParsed(testQuestion.answer);
+    // let answerParsed = currentQuestion.answer.toLowerCase();
 
-    if (messageParsed == answerParsed) {
-        // client.say(supportedChannel, `Congratulations ${user["display-name"]}, `);
-        correctGuess(user, message);
-    }
+    // console.log('messageParsed: ' + messageParsed);
+    // console.log('answerParsed: ' + testAnswerParsed);
+    console.log(`Round Winners: ${Round.winners}`);
+    console.log(`Round Losers: ${Round.losers}`);
+    console.log(Round.players);
+
+    let answerParsed = messageParsed.substr(8);
+    console.log(answerParsed);
+
+    // You left off here... this is a check to see if the player already took a turn this game.
+    // ********************** IMPORTANT ********************************
+    // You need to add a check for incorrect answers, players will get 3 chances, add it to the Rounds.players object
+    let playerExists = utils.checkForPlayer(Round.players, user.username);
+    console.log(playerExists);
+
+    // Bot can't check it's own messages, has to start with "what is" and cannot have a key in Round.players already
+    // if (!self && messageParsed.startsWith("what is ") && (Round.players.indexOf(user["display-name"]) === -1)) {
+    if (!self && messageParsed.startsWith("what is ") && (Round.winners.indexOf(user["display-name"]) === -1) && (Round.losers.indexOf(user["display-name"]) === -1)) {
+        if (answerParsed == testAnswerParsed) {
+            Round.players.push(user);
+            Round.winners.push(user["display-name"]);
+            console.log(`Round Winners: ${Round.winners}`);
+            // displayAnswer(user, message);
+            displayTestAnswer(user, answerParsed);
+        } else if (answerParsed !== testAnswerParsed) {
+            Round.players.push(user);
+            Round.losers.push(user["display-name"]);
+            console.log(`Round Losers: ${Round.losers}`);
+            displayTestIncorrectGuess(user, answerParsed);
+        }
+    };
 
     if (!self && messageParsed[0] === "!") {
         console.log(messageParsed);
         switch (messageParsed) {
-            case "!commands":
+            case "!help":
                 displayCommandsList();
                 break;
-            case "!hello":
-                client.say(supportedChannel, `Yooo @${user["display-name"]}! What you doin?`);
+            case "!power":
+                client.say(supportedChannel, `@${user["display-name"]}, you don't have any powerups to use.`);
                 break;
-            case "!trivia":
+            case "!start":
                 startTriviaGame();
-                break;
-            case "!bye":
-                client.say(
-                    supportedChannel,
-                    `Catch you on the flipside @${user["display-name"]}!`
-                );
                 break;
             case "!clear":
                 clearChatCommand(user);
@@ -150,7 +228,33 @@ client.on("chat", (channel, user, message, self) => {
             default:
                 break;
         }
-    }
+    };
+
+});
+
+// if (!self && (messageParsed[0] !== "!")) {
+//     if ((messageParsed == testAnswerParsed) && (roundWinners.indexOf(user) === -1)) {
+//         roundWinners.push(user);
+//         console.log(`Round Winners: ${roundWinners}`);
+//         // displayAnswer(user, message);
+//         displayTestAnswer(user, message);
+//     } else {
+//         roundLosers.push(user);
+//         console.log(`Round Losers: ${roundLosers}`);
+//         displayTestIncorrectGuess(user, message);
+//     }
+// }
+
+
+
+client.on("cheer", (channel, userstate, message) => {
+    // Can't test without using the cheer emote on twitch.
+    // This will be setup for users to purchase "powerups"
+    // Powerups:
+    //          - Select the category for the next 3 questions
+    //          - Double points for everyone for this question
+    //          - Freeze assets, players don't lose money if this question is incorrectly answered
+    console.log(userstate);
 });
 
 // message = exact message player inputs as a string
