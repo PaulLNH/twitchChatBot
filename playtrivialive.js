@@ -101,6 +101,8 @@ getTriviaQuestion = () => {
         });
 };
 
+messageIsAnswer = (message) => message.startsWith("what is ");
+
 // answerParsed = (targetStr) => {
 //     var index = targetStr.indexOf("\\");
 //     while (index >= 0) {
@@ -115,4 +117,6 @@ module.exports = {
     displayTestQuestion,
     startTriviaGame,
     testCorrectGuess,
+    Round,
+    messageIsAnswer,
 }
